@@ -1,2 +1,1 @@
-# learning
-experiment to check my consistency along with day job
+# small stuffs I am learning about shell commands
