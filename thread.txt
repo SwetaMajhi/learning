@@ -1,0 +1,22 @@
+1st there is program.
+a program consists of multiple processes. a process is program in execution.
+each process can have multiple threads. always has at least 1 thread.
+
+thread is the smallest unit of execution, to which processor allocates time.
+it consists of
+a thread id
+a resgister set
+program counter
+stack
+
+when multiple threads part of a process, they share
+-code section (duh! you all are supposed to follow the same logic)
+?-data section (variable)
+?-operating system resources like: files, signals etc. //what are signals
+
+ex. when using web browser application, 1 thread is displaying info, another is downloading file into my system
+
+Benefits of multi threading:
+may allow the process to keep running, even though a part of it is working on some extensive task, hence improving the responsive of application
+by resource sharing, we are making our system more efficient, the code, datam file which could have been used by just 1 threas that would gave taken time, now is being shared by multiple threads.
+
