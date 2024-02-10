@@ -18,5 +18,7 @@ ex. when using web browser application, 1 thread is displaying info, another is 
 
 Benefits of multi threading:
 may allow the process to keep running, even though a part of it is working on some extensive task, hence improving the responsive of application
-by resource sharing, we are making our system more efficient, the code, datam file which could have been used by just 1 threas that would gave taken time, now is being shared by multiple threads.
+by resource sharing, we are making our system more efficient, the code, datam file which could have been used by just 1 threads that would gave taken time, now is being shared by multiple threads.
+utilization of multi processor architechture: if have single thread process, will run on 1 processor. but if running multi thread process, each thread will run on one of the processor, hence end up utilizing processors, and tasks are run concurrently.
 
+//how is kernel thread created for 1 to 1 relationship
