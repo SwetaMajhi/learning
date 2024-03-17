@@ -1,0 +1,80 @@
+What are default methods? I thought interface always contains abstract methods!
+
+Before JDK 8! Yes, an interface could not define any implementation. For all previous versions of Java, the methods specified by an interface were abstract, containing no body.
+But with the release of JDK 8, came a new capability for interface called the default method. A default method lets you define a default implementation for an interface method. In other words, by use of a default method, it is now possible for an interface method to provide a body, rather than being abstract.
+
+What does it look like!
+To define a default method, precede its declaration with default.
+Because getAdminID( ) includes a default implementation, it is not necessary for an implementing class to override it.
+
+public interface intf1{
+	// The typical interface method declaration. 
+	// It does NOT define any implementation.
+	int yourOldBuddy();
+	
+	//default method
+	default int yourNewEnhancement(){
+		//execute some logic
+		//can also use yourOldBuddy() very confidently since I know all implementations of this interface have a definition for the old method.
+		if (yourOldBuddy()>=1 )
+		return 1
+		
+		return -1;
+	}
+}
+
+public class IntfImpl1 implements intf1{
+	//I have my own methods
+	public String doCertainTask(int a){
+		//task done
+		return "OK";
+	}
+	
+	//I have been implementing the old method before java8
+	public int yourOldBuddy(){
+		//task done
+		return 1;
+	}
+	
+	//Now I may or may not override the default method, as per my usecases
+	//If I override, my obj will obviously prioritize me.
+	//If I don't, well that's why yourNewEnhancement() has got a definition.
+	
+}
+
+Bruh whyyyyyeeee!
+The default method provides two major benefits:
+● It gives you a way to gracefully evolve interfaces over time without breaking existing code. 
+● It provides optional functionality without requiring that a class provide a placeholder implementation when that functionality is not needed.
+
+The primary motivation was to provide a means by which interfaces could be expanded without breaking existing code.
+If a class implements an interface, it has to implement the method. In the past, if a new method were added to a popular, widely used interface, then the addition of that method would break existing code because no implementation would be found for that method.
+The default method solves this problem by supplying an implementation that will be used if no other implementation is explicitly provided. Thus, the addition of a default method will not cause preexisting code to break. 
+
+Another motivation for the default method was the desire to specify methods in an interface that are, essentially, optional, depending on how the interface is used.
+For example, an interface might define a group of methods that act on some sort of list of elements. One of these methods might be called remove( ), and its purpose is to remove an element from the list. 
+However, if the interface is intended to support both modifiable and non-modifiable list. Then remove( ) is essentially optional because it won’t be used by non-modifiable sequences. In the past, a class that implemented a non-modifiable sequence would have had to define an empty implementation of remove( ), even though it was not needed. Today, a default implementation for remove( ) can be specified in the interface that either does nothing or reports an error. Providing this default prevents a class used for non-modifiable sequences from having to define its own, placeholder version of remove( ). Thus, by providing a default, the interface makes the implementation of remove( ) by a class optional.
+
+Any possible conflicts?
+Yes,
+1. If concrete class IntfImpl1 implements 2 interfaces intf1 and inf2, both contain a default method with same name:
+- IntfImpl1 overrides the default method all good
+- else, compiler throws error. you have to choose. how?
+
+public int yourNewEnhancement(){
+	return intf1.super.yourNewEnhancement();
+}
+
+1. a) What if, concrete class IntfImpl1 implements 2 interfaces intf1 and inf2, intf1 contains an abstract method with name yourNewEnhancement() and intf2 has default method with the same name. Then it must be obvious for IntfImpl1 class to pick the latter one!
+Apparently no! compiler will still ask you to resolve ambiguity.
+
+2. If comcrete class IntfImpl1  implements interface intf1 and extends concrete class Mafia.
+public class IntfImpl1 implements Intf1, extends Mafia{ ... }
+
+then we ahve thing called "class  wins" rule, it doesn't matter if interface provides a default method or not, if the name is same, Mafia wins.
+It works out well for Java7 as well, like if a class used to work before any default method in its interface, it will continue to work even after the default method.
+
+3. 
+ 
+
+ 

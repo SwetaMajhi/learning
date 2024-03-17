@@ -36,6 +36,8 @@ a functional interface is an interface that specifies only one abstract method, 
 Regardless of annotation if interface meets definiton of functional interface, compiler will treat it like one.
 Ex: Runnable interface
 
+Default methods are not abstract. Neither are static interface methods. Thus, an interface method is abstract only if it is does not specify an implementation. This means that a functional interface can include default and/or static methods, but in all cases it must have one and only one abstract method. Because non-default, non-static interface methods are implicitly abstract, there is no need to use the abstract modifier (although you can specify it, if you like).
+
 //Functional interface before lambda expression:
 
 //Functional interface with lambda expression:
