@@ -1,0 +1,76 @@
+What?
+its an anonymous function with no modifier, name and return type.
+
+(String str1, String str2) -> 
+{	
+	//can have more lines of code
+	return str1.length()- str2.length();
+}
+
+//no params
+
+() -> {System.out.println("Hello");}
+
+//if param types can be inferred,
+(str1,str2) -> 
+{	
+	//can have more lines of code
+	return str1.length()- str2.length();
+}
+
+//when pasing single param:
+(n) -> (n % 2)==0;
+n -> (n % 2)==0;
+
+You never mention result type, it is always inferred from context.
+
+Why do you even exist bro! 
+before this, you could not pass code blocks around in java. Java is an object oriented language, so you had to create a class that contains method, and then an obj to use that method. In other languages, it is easier to work with direct blocks of code directly. hence this was introduced.
+
+Resources: 
+Java a beginner guide, Herbert Schildt
+Core Java Fundamentasls, Cay S. Horstmann
+
+Functional interface:
+a functional interface is an interface that specifies only one abstract method, and can contain many default, non static methods.
+Regardless of annotation if interface meets definiton of functional interface, compiler will treat it like one.
+Ex: Runnable interface
+
+//Functional interface before lambda expression:
+
+//Functional interface with lambda expression:
+
+Before we were creating a new class, implementing a method. When working on a projetc, adding a new class means adding a new file, adding relevant documentation, etc, hence removing it to simplify.
+But now we cannot create an object of an interface, and now we have removed its implementaion also, so how do we use it?
+We can create an implementation right here itself, a class itself = anonymous inner class
+
+A obj = new A() {
+		
+			public void show(int a)
+			{
+				System.out.println("executing anonymous inner class to show a= "+ a);
+			}
+		};
+obj.show();
+
+//since functional interface has only one abstract method, lambda expression knows which method is being implemented here
+A obj = //new A() {
+		
+			//public void show
+			(a)->{
+				System.out.println("executing anonymous inner class to show a="+a);
+			}
+		//};
+obj.show();
+
+//cleaner version:
+A obj = a->System.out.println("executing lambda expression to show a="+a);
+obj.show(99);
+
+//child interface
+//how is functional interface diff from normal interface
+
+
+
+
+
