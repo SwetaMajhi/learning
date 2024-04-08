@@ -1,0 +1,35 @@
+Spring was introduced to replace EJB = Enterprise Java Beans.
+Using EJB, apps were becoming heavy-weight and tightly coupled. 
+Also better investment wise since spring is provinding free services.
+
+What is mant by light-weight?
+Java AWT has dependency on OS, hence uses OS libraries while running. whereas spring does not. it uses only jdk libs and spring jars. 
+For EJB you need app server, spring does not need that as well.
+
+Loosely coupled: in java we attain loose coupling using interface model instead of direct class obj and using run time polymorphism to determin the object.
+
+For servlets or EJBs we need to implement certain interfaces (GenericServlet, HttpServlet, etc) or must extend some classes. but in spring, we need simple POJO (plain old java obj) classes to implement DAO or business class. Spring asks to use association (has a relationship) instead of inheritence.
+class becomes lightweight.
+in case of inheritance, child class cannot work without parent class. whereas in case of has a relationship, can delete B class and rest will still work. no hard dependency.
+
+class D{
+ A a;
+}
+
+interface A{ }
+
+class B implements A{ }
+class C implements A{ }
+
+to pass input to pojo class, via main method, will have to pass input params in String args[] via command line. 
+or can also provide inputs via xml. IOC can read xmls.
+
+
+View -> Controller -> {service, business, dao}
+
+Throughout spring we have 3 containers: core, J2EE and web. 
+MVC contains web container. this is prepared on top of IOC.IOC contains core and J2EE.
+Main job of IOC container is to read data from xml docs and transfer them to POJO classes, into associated references to make your classes loosely coupled.
+
+
+
