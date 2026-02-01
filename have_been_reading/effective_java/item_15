@@ -1,0 +1,40 @@
+Minimize the accessibility of classes and members.
+Discusses:
+1. Encapsulation 
+- "...Components then communicate only through their APIs and are oblivious to each others’ inner workings. This concept, known as information hiding or encapsulation ..."
+- Benefits
+    - decoupled code: optimized and tested in isolation.
+    - parallel development --> speeds up development
+    components can be understood, debugged and replaced without harming others. sure!
+    - S/W reuse. Lame I know! but somehow I never mapped this term with info hiding. what happened is info hiding --> decoupling --> code reuse in other context. 
+    - Implementing Information hiding in Java -->access modifiers
+
+2. A Public figure or class, too much info can be compromising!
+- "...The rule of thumb is simple: make each class or member as inaccessible as
+possible.........use the lowest possible access level consistent with the proper functioning of the software that you are writing"
+- "...For top-level (non-nested) classes and interfaces, there are only two possible
+access levels: package-private and public..." Obviously you cannot make a top-level class private! REASON!!! (common sense):
+In practice gives compile-time error. In theory, the private access modifier restricts visibility to within the declaring class. If a top-level class were declared private, it would be inaccessible from outside its own definition, rendering it unusable and defeating the purpose of a class as a standalone unit of code.
+Protected is default+subclass in other packages, so can be thought of during inheritance. 
+- But what the author is trying to emphasize as pe rmy understanding: 
+    - If class = public --> you build project -->create jar -->gets imported in another project --> this other project can call public methods --> now you cannot modify/replace/remove it --> obligated to support it forever to maintain compatibility --> compromise!
+    - But if class = package-private --> can modify/replace/remove it, without fear of harming existing clients = freedom to mess up and rectify!
+
+3. Consider nested class
+- "...If a package-private top-level class or interface is used by only one class,
+consider making the top-level class a private static nested class of the sole class that uses it..."
+
+public class MyService {
+    private static class Helper {
+        // now truly internal to MyService. Now no other class in the world can see or touch Helper.
+    }
+}
+
+- Don’t force it if:
+    - The helper is shared across multiple classes in the package.
+    - The nested class needs access to instance members (then you make it non-static)//yet to explore
+
+4. Liskov substitution principle
+- "...If a method overrides a superclass method, it cannot have a more restrictive access level in the subclass than in the superclass. This is necessary to ensure that an instance of the subclass is usable anywhere that an instance of the superclass is usable...". Compilation of subclass won't let it happen though. Chill!
+- "...A special case of this rule is that if a class implements an interface, all of the class methods that are in the interface must be declared public in the class...."
+
