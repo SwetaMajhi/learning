@@ -9,14 +9,14 @@ Discusses:
     - S/W reuse. Lame I know! but somehow I never mapped this term with info hiding. what happened is info hiding --> decoupling --> code reuse in other context. 
     - Implementing Information hiding in Java -->access modifiers
 
-2. A Public figure or class, too much info can be compromising!
+2. A Public figure or Public class, too much info can be compromising!
 - "...The rule of thumb is simple: make each class or member as inaccessible as
 possible.........use the lowest possible access level consistent with the proper functioning of the software that you are writing"
 - "...For top-level (non-nested) classes and interfaces, there are only two possible
 access levels: package-private and public..." Obviously you cannot make a top-level class private! REASON!!! (common sense):
 In practice gives compile-time error. In theory, the private access modifier restricts visibility to within the declaring class. If a top-level class were declared private, it would be inaccessible from outside its own definition, rendering it unusable and defeating the purpose of a class as a standalone unit of code.
-Protected is default+subclass in other packages, so can be thought of during inheritance. 
-- But what the author is trying to emphasize as pe rmy understanding: 
+Protected is default + subclass in same/other packages, so can be thought of during inheritance. 
+- But what the author is trying to emphasize as per my understanding: 
     - If class = public --> you build project -->create jar -->gets imported in another project --> this other project can call public methods --> now you cannot modify/replace/remove it --> obligated to support it forever to maintain compatibility --> compromise!
     - But if class = package-private --> can modify/replace/remove it, without fear of harming existing clients = freedom to mess up and rectify!
 
@@ -36,5 +36,124 @@ public class MyService {
 
 4. Liskov substitution principle
 - "...If a method overrides a superclass method, it cannot have a more restrictive access level in the subclass than in the superclass. This is necessary to ensure that an instance of the subclass is usable anywhere that an instance of the superclass is usable...". Compilation of subclass won't let it happen though. Chill!
-- "...A special case of this rule is that if a class implements an interface, all of the class methods that are in the interface must be declared public in the class...."
+- ** "...A special case of this rule is that if a class implements an interface, all of the class methods that are in the interface must be declared public in the class...."
 
+5. Even when you do end up with public class try to have instance fields to be NOT/rarely public. WHY!!
+- Because you won't be able to enforce invariants(like balance cannot be negative, endDate > startDate, etc) But if instance var is public:
+
+class Person {
+    public int age;   // public and mutable
+}
+
+//Client code
+Person p = new Person();
+p.age = -10;   // allowed, You cannot stop invalid values
+
+//Rather should have been
+class Person {
+    private int age;
+
+    public void setAge(int age) {
+        if (age < 0) {
+            throw new IllegalArgumentException("Age cannot be negative");
+        }
+        this.age = age;
+    }
+
+    public int getAge() {
+        return age;
+    }
+}
+
+- Because it is likely to be NOT thread safe.
+class Counter {
+    public int count = 0;
+}
+
+//Multiple threads can do
+counter.count++;  // not atomic
+
+//Correct approach
+class Counter {
+    private int count;
+
+    public synchronized void increment() {
+        count++;
+    }
+
+    public synchronized int getCount() {
+        return count;
+    }
+}
+
+- Because "...Even if a field is final and refers to an immutable object, by making it public you give up the flexibility to switch to a new internal data representation in which the field does not exist...."
+    - Even though the field itself can't be reassigned and the object is immutable, you're locked into that specific implementation forever.
+    - Even with final and immutable objects, you're locking yourself into:
+        - The field's name
+        - The field's type
+        - The field's existence
+        - How the value is stored
+
+    - With a getter, you only commit to:
+        - The method's signature
+        - The return value's meaning
+    The implementation behind that getter can change completely.
+
+6. Constants
+- public static final fields.
+- should be either primitive or or references to immutable objects.
+- If you declare public static final on a mutable, you are making the reference immutable, NOT the object it points to. If that object is mutable, anyone can modify its contents.
+
+public class SecurityConfig {
+    public static final String[] ADMIN_ROLES = {"ADMIN", "SUPER_ADMIN"};
+}
+//somewhere in client code:
+// You can't reassign the reference
+// SecurityConfig.ADMIN_ROLES = new String[]{"HACKER"}; // Compilation error
+// BUT you CAN modify the contents! (This compiles and runs!)
+SecurityConfig.ADMIN_ROLES[0] = "HACKER";
+SecurityConfig.ADMIN_ROLES[1] = "GUEST";
+//The reference ADMIN_ROLES is still pointing to the same array, but the array's contents have been changed globally!
+
+- Fix1: You can make the public array private and add a public immutable list
+private static final Thing[] PRIVATE_VALUES = { ... };
+public static final List<Thing> VALUES = Collections.unmodifiableList(Arrays.asList(PRIVATE_VALUES));
+
+- Fix2: you can make the array private and add a public method that returns a copy of a private array
+private static final Thing[] PRIVATE_VALUES = { ... }; 
+public static final Thing[] values() { 
+    return PRIVATE_VALUES.clone();
+}
+
+7. Java 9 introduced Module
+- Group of related packages.
+my-library/
+├── module-info.java
+└── com/
+    ├── mylib/
+    │   ├── api/           (exported - public API)
+    │   │   └── UserService.java
+    │   └── internal/      (NOT exported - internal implementation)
+    │       ├── DatabaseHelper.java
+    │       └── CacheManager.java
+    └── mylib/utils/       (NOT exported)
+        └── StringUtils.java
+
+
+module com.mylib {
+    // Only exports the API package - this is your public contract
+    exports com.mylib.api;
+    
+    // DOESN'T export internal packages
+    // (com.mylib.internal and com.mylib.utils are hidden)
+}
+
+//Outside the module (someone using your library): DatabaseHelper is public, but because it's in an unexported package, it's only accessible within the module.
+- The warning:
+    Proper Module Usage enforced (Unexported packages are truly hidden), ONLY IF run with module path
+        java --module-path libs/ --module com.myapp/com.myapp.Main
+
+    Traditional Classpath Usage does NOT enforce, "Unexported" packages, public classes are accessible like in Java 8. If you don't use the module path, modules don't actually protect anything!
+        java -cp "libs/*" com.myapp.Main
+
+- Java 9 modules add complexity with limited practical benefit for most developers. They only truly work when everyone uses module paths (not classpath), and even then, the value doesn't justify the overhead for typical projects. Stick with traditional packages unless you have a specific, compelling reason for modules.
