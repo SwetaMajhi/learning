@@ -1,0 +1,95 @@
+In public classes, use accessor methods, not public fields
+Discusses:
+1. Degenerate classes
+- that serve no purpose other than to group instance fields
+- should not be public
+- Same points mentioned in item 15.5
+- "...and you can’t take auxiliary action when a field is accessed." You lose the ability to hook behaviour into the field access action. For example, 
+
+    - Logging 
+
+    public double getX() {
+            System.out.println("x was accessed");
+            return x;
+    }
+
+    - Caching
+
+    public double getArea() {
+            if (area == null) {
+                area = Math.PI * radius * radius;
+                System.out.println("Area computed and cached");
+            }
+            return area;
+    }
+
+    //client code
+    Circle c = new Circle(10);
+    System.out.println(c.getArea()); // Computes and caches
+    System.out.println(c.getArea()); // Returns cached
+
+
+    - Triggering observers
+
+    public setValue(x){
+    this.x = x;
+    //notify observers
+    }
+
+2. Is it ok to break the "always use getters/setters" rule!
+    - Package-Private Class
+
+        package com.myapp.internal;
+
+        // Package-private class (no public modifier)
+        // Only accessible within com.myapp.internal package
+        class UserData {
+            // Direct field access - NO getters/setters
+            String username;
+            String email;
+            int age;
+            
+            UserData(String username, String email, int age) {
+                this.username = username;
+                this.email = email;
+                this.age = age;
+            }
+        }
+
+        //If later want to change internal representation:
+        package com.myapp.internal;
+        import java.time.LocalDate;
+
+        class UserData {
+            String username;
+            String email;
+            LocalDate birthDate;  // Changed from age to birthDate
+            
+            // age calculation
+            int getAge() {
+                return Period.between(birthDate, LocalDate.now()).getYears();
+            }
+        }
+        - Only need to update code in com.myapp.internal package
+        - Maybe 3-5 classes in the same package
+        - No code outside the package is affected
+    
+    - Private Nested Class
+        public class BinarySearchTree {
+            // Private nested class - only BinarySearchTree can access it
+            private static class Node {
+                // Direct field access - perfectly fine!
+                int value;
+                Node left;
+                Node right;
+                
+                Node(int value) {
+                    this.value = value;
+                }
+                // No getters/setters needed - less clutter
+            }
+            private Node root;
+
+        - Less visual clutter
+        - No performance overhead from method calls
+        - Scope of change is limited to one class

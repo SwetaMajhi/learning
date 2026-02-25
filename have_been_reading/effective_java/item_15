@@ -39,7 +39,7 @@ public class MyService {
 - ** "...A special case of this rule is that if a class implements an interface, all of the class methods that are in the interface must be declared public in the class...."
 
 5. Even when you do end up with public class try to have instance fields to be NOT/rarely public. WHY!!
-- Because you won't be able to enforce invariants(like balance cannot be negative, endDate > startDate, etc) But if instance var is public:
+- Because you won't be able to enforce invariants, no way to guard against invalid inputs like NaN, Infinity, or even logical constraints like (like balance cannot be negative, endDate > startDate, etc). If you had private fields and public setters, you could validate. But if instance var is public:
 
 class Person {
     public int age;   // public and mutable
