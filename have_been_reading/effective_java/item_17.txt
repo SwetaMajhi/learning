@@ -8,3 +8,141 @@ Minimize mutability
     - Make all fields final.
     - Make all fields private: While it is technically permissible for immutable classes to have public final fields containing primitive values or references to immutable objects, it is not recommended because it precludes changing the internal representation in a later release
     - Ensure exclusive access to any mutable components. Make defensive copies in constructors, accessors, and readObject methods.
+
+- Example:
+// Immutable complex number class 
+public final class Complex { 
+    private final double re;
+    private final double im;
+    public Complex(double re, double im) { 
+        this.re = re; this.im = im; 
+    }
+
+    public Complex plus(Complex c) { 
+        return new Complex(re + c.re, im + c.im); 
+    }
+}
+    - Arithmetic operations create and return a new Complex instance rather than modifying this instance
+    - This pattern is known as the functional approach: methods return the result of applying a function to their operand, without modifying it. 
+    - Procedural or imperative approach: methods apply a procedure to their operand, causing its state to change.
+    - The method names are prepositions (such as plus) rather than verbs (such as add). This emphasizes the fact that methods don’t change the values of the objects.
+    - The BigInteger and BigDecimal classes did not obey this naming convention, and it led to many usage errors. 
+    The most frequent mistake with BigDecimal is forgetting that instances are immutable, leading developers to call methods like add() without capturing the returned value.
+        BigDecimal balance = new BigDecimal("100.00");
+        BigDecimal deposit = new BigDecimal("50.00");
+
+        // WRONG - balance is still 100.00!
+        balance.add(deposit);  // Returns new object, but we ignore it
+
+        System.out.println(balance);  // Still prints 100.00 - BUG!
+
+- Thread safe
+    -  Immutable Objects = Thread-Safe by Default = No synchronization needed
+    - Cannot be corrupted - Multiple threads can't create inconsistent state = Complete isolation
+    - Share freely - Pass immutable objects around without defensive copying
+        public class Person {
+            private String firstName;
+            private String lastName;
+            
+            public void setName(String first, String last) {
+                this.firstName = first;  // Step 1
+                this.lastName = last;     // Step 2
+            }
+            
+            public String getFullName() {
+                return firstName + " " + lastName;
+            }
+        }
+        
+        
+        //Thread corruption scenario in main code:
+        Person person = new Person();
+        person.setName("John", "Doe");
+
+        // Thread 1: Changes name to Alice Smith
+        new Thread(() -> person.setName("Alice", "Smith")).start();
+
+        // Thread 2: Changes name to Bob Jones
+        new Thread(() -> person.setName("Bob", "Jones")).start();
+
+        // Thread 3: Reads name
+        new Thread(() -> System.out.println(person.getFullName())).start();
+
+        // Possible outputs (all corrupted except first):
+        // "John Doe"      ← Original (if Thread 3 runs first)
+        // "Alice Smith"   ← Thread 1 completed
+        // "Bob Jones"     ← Thread 2 completed
+        // "Alice Jones"   ← CORRUPTED! (Thread 1 set firstName, Thread 2 set lastName)
+        // "Bob Smith"     ← CORRUPTED! (Thread 2 set firstName, Thread 1 set lastName)
+        
+        public final class ImmutablePerson {
+            private final String firstName;
+            private final String lastName;
+            
+            public ImmutablePerson(String firstName, String lastName) {
+                this.firstName = firstName;
+                this.lastName = lastName;
+            }
+            
+            public String getFullName() {
+                return firstName + " " + lastName;
+            }
+            
+            // Returns new object instead of modifying
+            public ImmutablePerson withName(String first, String last) {
+                return new ImmutablePerson(first, last);
+            }
+        }
+
+        //main code:
+        ImmutablePerson person = new ImmutablePerson("John", "Doe");
+
+        // Thread 1: Creates NEW person "Alice Smith"
+        ImmutablePerson p1 = person.withName("Alice", "Smith");
+
+        // Thread 2: Creates NEW person "Bob Jones"
+        ImmutablePerson p2 = person.withName("Bob", "Jones");
+
+        // Thread 3: Reads ORIGINAL person
+        System.out.println(person.getFullName());  // Always "John Doe"
+
+        // Each thread has its own object - no interference!
+        // Original person is untouched
+        // No corrupted state possible      
+    
+    - Provide public static final constants for commonly used values
+        // Java's String class does this
+        public final class String {
+            // Empty string is commonly used - provide a constant
+            public static final String EMPTY = "";  // Single instance shared by all
+        }
+
+        // Usage
+        String s1 = "";           // Creates new object
+        String s2 = String.EMPTY; // Reuses existing object (more efficient)
+
+    - Share freely - Pass immutable objects around without defensive copying
+        public final class ImmutableConfig {
+            private final List<String> allowedHosts;
+            
+            public ImmutableConfig(List<String> hosts) {
+                this.allowedHosts = List.copyOf(hosts);  // Immutable copy
+            }
+            
+            public List<String> getAllowedHosts() {
+                return allowedHosts;  // Safe to share - can't be modified
+            }
+        }
+
+        //usage
+        ImmutableConfig config = new ImmutableConfig(List.of("api.example.com"));
+
+        // Thread 1: Gets list and reads it
+        List<String> hosts1 = config.getAllowedHosts();
+        for (String host : hosts1) {
+            System.out.println(host);  // Safe!
+        }
+
+        // Thread 2: Gets list (same immutable list)
+        List<String> hosts2 = config.getAllowedHosts();
+        // hosts2.clear();  // Won't compile! List is immutable
