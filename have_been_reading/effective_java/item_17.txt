@@ -146,3 +146,7 @@ public final class Complex {
         // Thread 2: Gets list (same immutable list)
         List<String> hosts2 = config.getAllowedHosts();
         // hosts2.clear();  // Won't compile! List is immutable
+
+- About static factories
+    - "..An immutable class can provide static factories (Item 1) that cache frequently requested instances to avoid creating new instances when existing ones would do.."
+    - "...static factories causes clients to share instances instead of creating new ones, reducing memory footprint and garbage collection costs. Opting for static factories in place of publicconstructors when designing a new class gives you the flexibility to add caching later, without modifying clients...."
