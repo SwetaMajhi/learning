@@ -150,3 +150,20 @@ public final class Complex {
 - About static factories
     - "..An immutable class can provide static factories (Item 1) that cache frequently requested instances to avoid creating new instances when existing ones would do.."
     - "...static factories causes clients to share instances instead of creating new ones, reducing memory footprint and garbage collection costs. Opting for static factories in place of publicconstructors when designing a new class gives you the flexibility to add caching later, without modifying clients...."
+
+- Sharing freely
+    - Immutable objects = can be shared freely = never have to make defensive copies/ any copy
+    - Since the copies would be forever equivalent to the originals
+    - No need to provide clone or copy constructor inside immutable class
+
+- Cons of immutability
+    - they require a separate object for each distinct value. Creating these objects can be costly, especially if they are large. 
+    - performance problem, if perform a multistep operation that generates a new object at every step, eventually discarding all objects except the final result.
+    - soln
+        - Primitive
+            - Package-Private Mutable Companion = Internal optimization for predictable operations
+            - guess which multistep operations will be commonly required and to provide them as primitives. If a multistep operation is provided as a primitive, the immutable class does not have to create a separate object at each step.
+            - example: BigInteger class uses MutableBigInteger internally. Not available for us to use.
+        - provide a public mutable companion class.
+            - Example: String class, whose mutable companion is StringBuilder.
+    
