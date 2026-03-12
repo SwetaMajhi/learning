@@ -159,11 +159,15 @@ public final class Complex {
 - Cons of immutability
     - they require a separate object for each distinct value. Creating these objects can be costly, especially if they are large. 
     - performance problem, if perform a multistep operation that generates a new object at every step, eventually discarding all objects except the final result.
-    - soln
+    * soln
         - Primitive
             - Package-Private Mutable Companion = Internal optimization for predictable operations
             - guess which multistep operations will be commonly required and to provide them as primitives. If a multistep operation is provided as a primitive, the immutable class does not have to create a separate object at each step.
             - example: BigInteger class uses MutableBigInteger internally. Not available for us to use.
         - provide a public mutable companion class.
-            - Example: String class, whose mutable companion is StringBuilder.
-    
+            - Give users flexibility for unpredictable operations
+            - Example: String class = immutable, provides a mutable companion class = StringBuilder.
+
+- Design Alternatives
+    - want immutability = gurantee no subclass allowed = make class final
+    - alternative: make constructors private/package private, have public static factories instead
