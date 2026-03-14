@@ -3,15 +3,17 @@ Consider static factory methods instead of constructors
 - When thinking of providing ways to instantiate a class:
     - we know public constructors 
     - another way = a static method that returns an instance of the class
-    - Example: Boolean class (the boxed primitive class for boolean
+    - Example: Boolean class (the boxed primitive class for boolean)
     - A class can provide its clients with static factory methods instead of, or in addition to, public constructors.
     
-- Adv of static factory methods
+- 1st Adv of static factory methods
     - Unlike constructors, they have names.
         - code easier to read
         - In cases where a class seems to require multiple constructors with the same signature, replace the constructors with static factory methods and carefully chosen names to highlight their differences.
+
+- 2nd Adv of static factory methods
     - They are not required to create a new object each time they’re invoked
-        - This allows immutable classes (Item 17) to use preconstructed instances, or to cache instances as they’re constructed, and dispense them repeatedly to avoid creating unnecessary duplicate objects.
+        - This allows immutable classes to use preconstructed instances, or to cache instances as they’re constructed, and dispense them repeatedly to avoid creating unnecessary duplicate objects = performace improve
         - Example:
             public final class Boolean {
                 // Pre-constructed instances (immutable and safe to share)
@@ -41,3 +43,50 @@ Consider static factory methods instead of constructors
 
             // Only TWO Boolean objects exist in entire JVM
             // Safe because Boolean is immutable
+
+- Instance controlled classes
+    - when returning same object from repeated invocations = classes maintaining strict control over instances
+    - such classes used for 
+        - singleton classe
+        - noninstantiable class
+        - making sure no 2 equal instances exist.
+            - a.equals(b) if and only if a == b.
+            - If two references are equal by value (a.equals(b) is true), then they are the same object (a == b is true).
+            - This is the basis of the Flyweight pattern.
+            - Example:
+            //Integer only controls instances in the range -128 to 127. Outside this range, it creates new objects, so the guarantee doesn't hold.
+            Integer a = Integer.valueOf(100);
+            Integer b = Integer.valueOf(100);
+
+            // Value equality
+            System.out.println(a.equals(b));  // true (same value)
+
+            // Reference equality - ALSO TRUE!
+            System.out.println(a == b);  // true (same object!)
+
+            Integer x = Integer.valueOf(1000);
+            Integer y = Integer.valueOf(1000);
+
+            // Value equality
+            System.out.println(x.equals(y));  // true (same value)
+
+            // Reference equality - FALSE
+            System.out.println(x == y);  // false (different objects)
+    
+    - we see similar behaviour in Enums also. JVM ensures only ONE instance of each enum constant exists.
+        public enum Color {
+            RED, GREEN, BLUE
+        }
+
+        // Usage
+        Color c1 = Color.RED;
+        Color c2 = Color.RED;
+
+        // Value equality
+        System.out.println(c1.equals(c2));  // true
+
+        // Reference equality - ALSO TRUE!
+        System.out.println(c1 == c2);  // true
+
+- 3rd Adv of static factory methods
+    

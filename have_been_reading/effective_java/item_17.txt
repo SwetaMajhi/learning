@@ -162,11 +162,11 @@ public final class Complex {
     * soln
         - Primitive
             - Package-Private Mutable Companion = Internal optimization for predictable operations
-            - guess which multistep operations will be commonly required and to provide them as primitives. If a multistep operation is provided as a primitive, the immutable class does not have to create a separate object at each step.
+            - guess which multistep operations will be commonly required and provide them as primitives. If a multistep operation is provided as a primitive, the immutable class does not have to create a separate object at each step.
             - example: BigInteger class uses MutableBigInteger internally. Not available for us to use.
         - provide a public mutable companion class.
             - Give users flexibility for unpredictable operations
-            - Example: String class = immutable, provides a mutable companion class = StringBuilder.
+            - Example: String class = immutable, provides a mutable companion class = StringBuilder (internally uses a mutable character array (char[]) to store and modify the sequence of characters).
 
 - Design Alternatives
     - want immutability = gurantee no subclass allowed = make class final
