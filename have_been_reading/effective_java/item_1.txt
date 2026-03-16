@@ -48,7 +48,7 @@ Consider static factory methods instead of constructors
     - when returning same object from repeated invocations = classes maintaining strict control over instances
     - such classes used for 
         - singleton classe
-        - noninstantiable class
+        ** noninstantiable class
         - making sure no 2 equal instances exist.
             - a.equals(b) if and only if a == b.
             - If two references are equal by value (a.equals(b) is true), then they are the same object (a == b is true).
@@ -89,4 +89,170 @@ Consider static factory methods instead of constructors
         System.out.println(c1 == c2);  // true
 
 - 3rd Adv of static factory methods
-    
+    - Static factory methods can return an object of any subtype
+                                // With static factory, you can return ANY subtype
+                                public abstract class Animal {
+                                    // Returns Animal, but could be Dog, Cat, Bird, etc.
+                                    public static Animal create(String type) {
+                                        switch (type) {
+                                            case "dog": return new Dog();      // Dog extends Animal
+                                            case "cat": return new Cat();      // Cat extends Animal
+                                            case "bird": return new Bird();    // Bird extends Animal
+                                            default: throw new IllegalArgumentException();
+                                        }
+                                    }
+                                }
+
+                                class Dog extends Animal { /* ... */ }
+                                class Cat extends Animal { /* ... */ }
+                                class Bird extends Animal { /* ... */ }
+
+                                // Usage
+                                Animal pet = Animal.create("dog");  // Returns Dog, but type is Animal
+                                // Caller doesn't need to know about Dog class!
+    - API can return objects without making their classes public
+    ** Example: this is also called interface-based frameworks: 
+        // Here All implementation classes are public 
+        public class ArrayList<E> implements List<E> { /* ... */ }
+        public class LinkedList<E> implements List<E> { /* ... */ }
+        public class UnmodifiableList<E> implements List<E> { /* ... */ }
+        public class SynchronizedList<E> implements List<E> { /* ... */ }
+        public class EmptyList<E> implements List<E> { /* ... */ }
+        public class SingletonList<E> implements List<E> { /* ... */ }
+        // ... and 39 more public classes!
+
+        // Users must know about all these classes:
+        List<String> list1 = new ArrayList<>();
+        List<String> list2 = new UnmodifiableList<>(list1);
+        List<String> list3 = new SynchronizedList<>(list1);
+        List<String> list4 = new EmptyList<>();
+
+        // 45 public classes to learn and remember!
+        // API is huge and complex
+
+
+        //Rather we can have implementation classes hidden (package-private or private)
+        // Public interface
+        public interface List<E> { /* ... */ }
+
+        // Public factory class
+        public class Collections {
+            
+            // Static factory methods return List, but hide implementations
+            public static <T> List<T> emptyList() {
+                return new EmptyList<>();  // EmptyList is not public!
+            }
+            
+            public static <T> List<T> singletonList(T o) {
+                return new SingletonList<>(o);  // SingletonList is not public!
+            }
+            
+            public static <T> List<T> unmodifiableList(List<? extends T> list) {
+                return new UnmodifiableList<>(list);  // UnmodifiableList is not public!
+            }
+            
+            public static <T> List<T> synchronizedList(List<T> list) {
+                return new SynchronizedList<>(list);  // SynchronizedList is not public!
+            }
+        }
+
+        // Implementation classes are package-private (hidden from users)
+        class EmptyList<E> implements List<E> { /* ... */ }
+        class SingletonList<E> implements List<E> { /* ... */ }
+        class UnmodifiableList<E> implements List<E> { /* ... */ }
+        class SynchronizedList<E> implements List<E> { /* ... */ }
+
+        // Users only see the public API:
+        List<String> list1 = Collections.emptyList();
+        List<String> list2 = Collections.singletonList("hello");
+        List<String> list3 = Collections.unmodifiableList(myList);
+        List<String> list4 = Collections.synchronizedList(myList);
+
+        // Only need to know:
+        // - List interface
+        // - Collections class with factory methods
+        // Don't need to know about 45 implementation classes!
+ 
+    ** "..such a static factory method requires the client to refer to the returned object by interface rather than implementation class, which is generally good practice...", NEED TO DIG FURTHER
+
+
+- "...Prior to Java 8, interfaces couldn’t have static methods. By convention, static factory methods for an interface named Type were put in a noninstantiable companion class  named Types..."
+    - Ok got a little confused here! they are talking about just naming pattern. 
+    - Example for some better visualization
+    // Interface (singular)
+    package java.util;
+
+    public interface Collection<E> extends Iterable<E> {
+        boolean add(E e);
+        boolean remove(Object o);
+        int size();
+        // ... more methods
+    }
+
+    // Companion class (plural)
+    package java.util;
+
+    public class Collections {  // Note the 's' at the end
+        
+        // Private constructor - noninstantiable
+        private Collections() {
+            throw new AssertionError("No instances for you!");
+        }
+        
+        // Static factory methods
+        public static <T> List<T> emptyList() {
+            return (List<T>) EMPTY_LIST;
+        }
+        
+        public static <T> List<T> singletonList(T o) {
+            return new SingletonList<>(o);
+        }
+        
+        public static <T> List<T> unmodifiableList(List<? extends T> list) {
+            return new UnmodifiableList<>(list);
+        }
+        
+        // ... many more static methods
+    }
+
+    // Use the interface type
+    Collection<String> collection = new ArrayList<>();
+
+    // Use the companion class for utilities
+    List<String> empty = Collections.emptyList();  // Note: Collections (plural)
+    List<String> readonly = Collections.unmodifiableList(collection);
+
+    - But what is up with "noninstantiable companion class"!!
+        - Like the "Collections" class above is public but has private constructor and none of its public static methods are creating/returning any object.
+        - But why! Before Java 8, interfaces couldn't have static methods, so a separate companion class was needed to hold static factory methods. Java doesn't have "static classes" or "utility classes" as first-class concepts. A noninstantiable class is the workaround.
+        -  After Java 8, interfaces can have static methods, eliminating the need for companion classes, I think!
+        - Example: Can put static methods directly in interface!
+            public interface List<E> extends Collection<E> {
+                
+                // Instance methods
+                boolean add(E e);
+                E get(int index);
+                
+                // Static factory methods - directly in interface! ✓
+                static <E> List<E> of() {
+                    return ImmutableCollections.emptyList();
+                }
+                
+                static <E> List<E> of(E e1) {
+                    return new ImmutableCollections.List1<>(e1);
+                }
+                
+                static <E> List<E> of(E e1, E e2) {
+                    return new ImmutableCollections.List2<>(e1, e2);
+                }
+            }
+
+            // Usage - much more intuitive!
+            List<String> empty = List.of();  // Directly from interface!
+            List<String> one = List.of("hello");
+            List<String> two = List.of("hello", "world");
+
+            // No need for separate Lists companion class!
+        - Then Why have an interface at all? Why not just have a class with static methods?
+
+
