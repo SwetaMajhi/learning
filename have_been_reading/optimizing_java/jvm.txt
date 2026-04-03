@@ -1,0 +1,14 @@
+Interpreting and Classloading in Java
+
+1. covers how the JVM runs your code and how it finds and loads the classes needed to run it.
+
+1. The JVM is a stack-based machine — instead of using hardware registers (like a real CPU), it uses a stack to do calculations.
+2. What happens when you run java HelloWorld:
+    - The OS starts the JVM process
+    - JVM sets up the stack machine environment
+    - It looks for the main() method in HelloWorld.class
+3. Before executing, it must load the class = classloading. When JVM starts, it uses a chain of 3 classloaders.
+    - There are 3 classloaders in a parent-child chain: Bootstrap -> Extension -> Application
+    - When a class is needed and not found by classloaders -> they delegate to parent. 
+    - If eventually Bootstrap classloader is unable to find it -> ClassNotFoundException is thrown
+    - A class is generally loaded only once. But the same class can be loaded twice by different classloaders. Hence, class is uniquely identified by: classloader + fully qualified class name (package + class name)
