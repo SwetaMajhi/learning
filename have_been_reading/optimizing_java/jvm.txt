@@ -12,3 +12,17 @@ Interpreting and Classloading in Java
     - When a class is needed and not found by classloaders -> they delegate to parent. 
     - If eventually Bootstrap classloader is unable to find it -> ClassNotFoundException is thrown
     - A class is generally loaded only once. But the same class can be loaded twice by different classloaders. Hence, class is uniquely identified by: classloader + fully qualified class name (package + class name)
+
+4. Executing Bytecode
+    - The job of javac is to convert Java code into .class files that contain bytecode.
+    - Very few optimizations are done during compilation by javac
+    - Bytecode is an intermediate representation that is not tied to a specific machine architecture = Decoupled from the machine architecture = already developed (or compiled) software can run on any platform supported by the JVM
+    - JVM can execute any JVM language that can produce a valid class file = the Scala compiler scalac can generate bytecode for execution on the JVM.
+    - Any class that is loaded by the JVM will be verified to conform to the expected format before being allowed to run.
+    - Every class file starts with the magic number 0xCAFEBABE, and a part of it is checked (by the classloader) to ensure that the target JVM is not of a lower version than the one used to compile the class file. If these are not compatible an UnsupportedClassVersionError will be thrown at runtime, indicating the runtime is a lower version than the compiled class file.
+
+5. Hostpot
+    - HotSpot is the JVM engine that dramatically improved Java's performance.
+    - two different philosophies in how programming languages are built:
+        - Close to the metal: full control, maximum raw speed, zero overhead = Code must be compiled to platform-specific machine code at build time — called Ahead-of-Time (AOT) compilation.
+        - Developer productivity: Easier to write, portable, runtime handles optimizations = Java approach = HotSpot observes which parts of your code run frequently (called "hot spots") and applies intelligent optimizations there automatically.
