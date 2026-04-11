@@ -26,3 +26,37 @@ Interpreting and Classloading in Java
     - two different philosophies in how programming languages are built:
         - Close to the metal: full control, maximum raw speed, zero overhead = Code must be compiled to platform-specific machine code at build time — called Ahead-of-Time (AOT) compilation.
         - Developer productivity: Easier to write, portable, runtime handles optimizations = Java approach = HotSpot observes which parts of your code run frequently (called "hot spots") and applies intelligent optimizations there automatically.
+
+6. JIT compilation
+    - compiler turns .java into .class files containing bytecode. Then JVM interprets this bytecode. This gives portability (run anywhere) but sacrifices raw speed because code isn't running directly on the CPU.
+    Like how  C code ultimately turns into machine code that the computer's CPU can directly execute, but in case of java, the CPU is actually running the JVM interpreter program, which in turn reads and processes your Java bytecode. Like watching eng movie vs watching gujrati movie with subtitles. 
+    - The goal: Get the best of both worlds — portability AND near-native CPU performance. JIT compilation is how HotSpot achieves this.
+    - Hotspot compiles code while the program is running, not before.
+    - HotSpot watches your running program and converts frequently used bytecode to native machine code on the fly.
+    - Units that get JIT compiled = Methods & Loops
+    - How JIT Works 
+        - Program Starts
+        - Runs in interpreter mode (slow but observing)
+        - HotSpot monitors which methods/loops run most often 
+        - Collects "trace information" (profiling data) 
+        - When a method crosses a threshold (runs enough times)
+        - HotSpot compiles that method to native machine code
+        - Next time, runs directly on CPU = faster
+    Hence HotSpot made more informed optimizations = can even detect the precise CPU type it is running on at VM startup, and can use this information to enable optimizations designed for specific processor features if available. 
+    - After being translated from Java source to bytecode and now going through another step of (JIT) compilation, the code actually being executed has changed very significantly from the source code as written. JIT-compiled code executing on the JVM may well look nothing like the original Java source code.
+    - ** Analyzing the performance of small sections of Java code (microbenchmarks) is usually actually harder than analyzing entire applications, and is a very specialized task that the majority of developers should not undertake.
+
+7. JVM Memory Management
+    - Poor manual memory management was a major cause of bugs and errors in languages like C and C++, wasting developer time. Hence, Java looked to help resolve the problem by introducing automatically managed heap memory using a process known as garbage collection (GC).
+    - GC triggers when the JVM needs more memory = nondeterministic = can't predict exactly when it will run.
+    - It recovers and reuses memory that is no longer needed. 
+    - GC comes with a cost = when it runs, it causes a "Stop-the-World" (STW) pause = entire application freezes/pauses while GC is doing its work. These pause times are designed to be very small but they still exist
+
+8. Threading and the Java Memory Model
+    - Languages like C and C++ had multithreading but it was complex, platform-specific and not standardized, Java made it simpler and portable = same multithreading code runs on any platform.
+    - Each Java application thread maps to a dedicated OS thread (1:1 mapping). Green threads (shared pool approach) was tried but rejected due to poor performance and added complexity.
+    - The Java Memory Model (JMM) is a formal model of memory that explains how different threads of execution see the changing values held in objects. That is, if threads A and B both have references to object obj, and thread A alters it, what happens to the value observed in thread B?
+        - This is complex because the OS scheduler can kick a thread off the CPU at any time — another thread may see an object in a damaged/invalid state.
+        - Java provides mutual exclusion locks as the core defense against concurrent object damage. But locks are complex to use correctly in real applications.
+
+9. Monitoring and Tooling for the JVM
