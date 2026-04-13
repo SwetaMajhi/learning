@@ -1,0 +1,53 @@
+- TradeOffs between read and write
+    - The simplest DB is an append-only log = every write adds a new line, never overwrites = Writes are fast because appending to a file is the cheapest possible disk operation
+    - Reads always fetch the latest entry for a key.
+    - Problem: With append only, number of records quickly increase. Without an index, every read = full file scan = O(n). Hence need index = keep some additional metadata on the side, which acts as a signpost and helps you to locate the data you want.
+    - Indexing doesn’t affect the contents of the database; it only affects the performance of queries
+    - Can have multiple indexes on the same data for different query patterns.
+    - Problem again: Any kind of index usually slows down writes, because the index also needs to be updated every time data is written. = hard to beat the performance of simply appending to a file, because that’s the simplest possible write operation.
+
+- indexes for key-value data
+    - key value store similar to hashmaps, so discussing idea of using hashmap for indexing = hash indexing. Again considering simple DB = write as append only
+    - WRITES:
+        - the simplest possible indexing strategy is this: keep an in-memory hash map where every key is mapped to a byte offset in the data file = the location at which the value can be found.
+        - On write --> append to file + update hash map with new offset (in RAM)
+    - READS: 
+        - On read --> hash map gives offset --> single disk seek --> read value.
+        - If the data is already in filesystem cache = zero disk I/O
+    - Bitcask (the default storage engine in Riak) does the same.
+    - Problem: All keys must fit in RAM. The hash map lives entirely in memory
+    - Suitable for
+        - Need fast reads + high write throughput(high write frequency) + Key space should be small and bounded.
+        - Many updates to the same key, but total number of distinct keys should be manageable = feasible to keep all keys in memory. If huge number of distinct keys, keys won't fit in memory = Hash index breaks
+        -  e.g. a counter or metric per URL/user/event
+
+- Solving Append-only logs growing forever = Compaction
+    - Every write appends = disk fills up eventually
+    - Solution = break the log into fixed-size segments. When a segment hits size limit, close it, subsequent writes in a new one.
+    - Compaction = scanning a segment, keeping only the latest value per key, throwing away older duplicates.
+        - Often done alongside merging = multiple segments are compacted and combined into one new file.
+        - Merged segment is written to a new file = old segments are never modified.
+        - Done in a background thread = reads and writes continue uninterrupted on old segments.
+        - Once merging is done --> switch reads to using the new merged segment --> delete old ones
+    - Each segment has its own in-memory hash map = hash index
+    - READS: check most recent segment first --> if key not present check 2nd most recent --> so on
+    - Merging keeps segment count small, so you rarely check more than a couple of hash maps
+
+- Concerns when implementing hash indexing and compaction and how are they handled:
+    - File format = In Disk, how data is written to the data file. CSV is not the best format for a log. It’s faster and simpler to use a binary format that first encodes the length of a string in bytes, followed by the raw string (without need for escaping).
+    - Deleting records = In Disk deleting key value, tombstone is appended to the data file = tells the merging process to discard any previous values for the deleted key.
+    - Partial writes = In Disk checksum detects corrupted bytes in the data file and ignores them.
+    - Crash recovery = In RAM hash maps are lost on crash. Can read the entire segment file from beginning to end, noting the offset of the most recent value for every key as you go along = time taking. Rather have snapshots of hash maps saved to disk so they can be reloaded into RAM fast.
+    - Concurrency = Thread management for who writes to / reads from disk. Single writer thread for sequential writes. Multiple reader threads.
+    
+- Good stuff:
+    - Sequential writes are much faster than random writes — on both HDDs and SSDs
+    - Concurrency and crash recovery are much simpler if segment files are appendonly or immutable. No situation of overwriting = no crash causing records to have part old data part new data spliced together.
+    - Merging point*********
+
+- Problems:
+    - All keys must fit in RAM. The hash map lives entirely in memory
+    - Won't work with range queries, hash indexing has no ordering 
+
+
+
