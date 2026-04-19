@@ -1,0 +1,87 @@
+Optimizing Recommendation Systems with JDK’s Vector API
+
+PROBLEM:
+Netflix wants to answer this question: “For a given user, how different (yet interesting) is a new movie compared to what they’ve already watched?”
+This is part of their recommendation system.
+
+##How do they represent this?
+Each movie/show is converted into a vector:
+  Movie A → [0.2, 0.9, 0.1, ...]
+  Movie B → [0.3, 0.85, 0.05, ...]
+These vectors capture:
+* genre
+* tone
+* actors
+* user behavior patterns
+  (you can think of it as compressed “meaning”)
+
+## What computation are they doing?
+For every user:
+* They have N = movies user already watched
+* They want to evaluate M = new candidate movies
+For each candidate movie, they compare it with every watched movie. So computation becomes:
+
+for each candidate movie (M):
+    for each watched movie (N):
+        compute similarity(candidate, watched)
+
+* Total operations = M × N
+
+## Example:
+* User watched: 500 movies
+* Candidates: 1000 movies
+Total = **500,000 similarity computations per user**
+Now multiply that by:
+* millions of users
+* real-time requests
+This piece of code alone was consuming ~7.5% of total CPU at Netflix.
+
+Solution:
+1. They did batching
+Modern CPUs are not optimized for tiny independent operations. They are optimized for doing the same operation on many data points at once.
+Hence instead of many dot products, they packed data into matrices:
+
+// Build matrices
+double[][] A = new double[M][D]; // candidates
+double[][] B = new double[N][D]; // history
+
+for (int i = 0; i < M; i++) {
+  A[i] = embedding(candidates[i]).toArray();
+}
+for (int j = 0; j < N; j++) {
+  B[j] = embedding(history[j]).toArray();
+}
+
+// Normalize rows to unit vectors
+normalizeRows(A);
+normalizeRows(B);
+
+// Compute C = A * B^T
+double[][] C = matmul(A, B);
+C[i][j] = cosine(candidates[i], history[j])
+
+// Derive serendipity
+for (int i = 0; i < M; i++) {
+  double maxSim = max(C[i][0..N-1]);
+  double serendipity = 1.0 - maxSim;
+  emitFeature(candidates[i], serendipity);
+}
+
+* This turns M×N separate dot products into a single matrix multiply, which is exactly what CPUs and optimized kernels are built for. 
+
+2. Still facing issue
+They expected a big performance win, instead, they saw a ~5% regression in performance.
+* It was building double[][] matrices for candidates, history, and results on every request. Those large, short-lived allocations created GC pressure = Memory fills up quickly, Garbage Collector runs frequently, CPU gets wasted cleaning memory = latency spikes & throughput drops. 
+* In double[][], each row is a separate object, separate array in memory. This leads to scattered, non-contiguous memory access = bad cache behavior.
+* A simple double/triple loop can be vectorized by the JVM, via JIT auto-vectorization. But it’s not guaranteed, and often not optimal. 
+
+3. To solve above issues
+* Introduced a ThreadLocal<BufferHolder> that owns reusable buffers for candidates, history, and any other scratch space. The same memory is reused and overwritten on each request, hence how GC pressure is reduced. uffers grow as needed but never shrinks = allocate occasionally, reuse most of the time.
+* Switched to flat double[] buffers in row-major order. 
+Something like: 
+double[] A_flat = new double[M * D];
+[A11 A12 A13 ... A1D	A21 A22 ... A2D 	A31 ...]
+That gave contiguous memory and predictable access patterns = better cache locality.
+* Used Java's vector API. You write in terms of vectors and lanes, and the JIT maps those operations to the best SIMD instructions available on the host CPU (SSE/AVX2/AVX-512), with a scalar fallback when needed.	
+
+
