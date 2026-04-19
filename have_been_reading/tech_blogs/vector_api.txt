@@ -38,7 +38,7 @@ This piece of code alone was consuming ~7.5% of total CPU at Netflix.
 
 Solution:
 1. They did batching
-Modern CPUs are not optimized for tiny independent operations. They are optimized for doing the same operation on many data points at once.
+Modern CPUs are not optimized for tiny independent operations. They are optimized for doing the same operation on many data points at once (called SIMD).
 Hence instead of many dot products, they packed data into matrices:
 
 // Build matrices
@@ -67,7 +67,7 @@ for (int i = 0; i < M; i++) {
   emitFeature(candidates[i], serendipity);
 }
 
-* This turns M×N separate dot products into a single matrix multiply, which is exactly what CPUs and optimized kernels are built for. 
+* This turns M×N separate dot products into a single matrix multiply, which is exactly what CPUs and optimized kernels are built for. They were doing this to make the best use of SIMD(Single instruction Multiple Data).
 
 2. Still facing issue
 They expected a big performance win, instead, they saw a ~5% regression in performance.
@@ -84,4 +84,9 @@ double[] A_flat = new double[M * D];
 That gave contiguous memory and predictable access patterns = better cache locality.
 * Used Java's vector API. You write in terms of vectors and lanes, and the JIT maps those operations to the best SIMD instructions available on the host CPU (SSE/AVX2/AVX-512), with a scalar fallback when needed.	
 
+##More on SIMD
+SIMD is short for Single Instruction/Multiple Data, while the term SIMD operations refers to a computing method that enables processing of multiple data with a single instruction. In contrast, the conventional sequential approach using one instruction to process each individual data is called scalar operations.
+With conventional scalar operations, four add instructions must be executed one after another to obtain the sums. Meanwhile, SIMD uses only one add instruction to achieve the same result. Requiring fewer instructions to process a given mass of data, SIMD operations yield higher efficiency than scalar operations
 
+//Another blog on someone improved sorting using vector API. Read someday!
+// I can think of vector API when facing somthing like batched processing, contiguous data, CPU bottleneck
