@@ -1,0 +1,29 @@
+Hardware and Operating Systems
+
+The origin of cache!!
+- the exponentially increasing number of transistors was initially used for faster and faster clock speed. Faster clock speed means more instructions completed per second.
+- Issue: Faster chips require a faster stream of data to act upon, over time main memory could not keep up with the demands of the processor core for fresh data.
+- Problem: if the CPU is waiting for data, then faster cycles don’t help, as the CPU will just have to idle until the required data arrives.
+- Solution: CPU caches were introduced.
+
+Memory cache
+- Memory areas on the CPU that are slower than CPU registers, but faster than main memory.
+- CPU fills the cache with copies of often accessed memory locations, rather than asking main memory
+- several layers of cache, most-often-accessed caches being located close to the processing core.
+- L1=cache closest to the CPU. Typically, each core has dedicated L1 and L2 caches, while L3 is shared across cores. Lower levels are faster but smaller.
+- Caches significantly improve data access times and help keep the processor supplied with data, reducing idle waiting time. A larger portion of transistors is now allocated to building bigger, more sophisticated caches rather than just boosting clock speed further
+- Main memory is accessed over the Northbridge component, and it is traversing this bus that causes the large drop-off in access time to main memory. (img)
+- Problem: Multiple caches create a problem: ensuring memory consistency when data is cached in different places.
+- Solution: cache consistency protocols.
+
+MESI Protocol 
+- A common solution defines four cache states for any line in a cache. Each line (usually 64 bytes) is either:
+	- Modified: Changed, not yet written to main memory
+	- Exclusive: Only in this cache, matches main memory
+	- Shared: May exist in other caches, matches main memory
+	- Invalid: Cannot be used; will be discarded
+** General working idea of the protocol is {Later}
+- Cache Write Strategy: 
+	- Early approach where every cache write goes directly to main memory (inefficient, high bandwidth) = Write-through
+	- Modern approach where only modified cache blocks are written to memory when replaced (significantly reduces traffic) = Write-back
+
